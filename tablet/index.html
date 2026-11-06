@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Docházka</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Docházka">
+<style>
+  html,body{margin:0;height:100%;background:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1d2b2b}
+  iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
+  #setup{max-width:520px;margin:0 auto;padding:32px 20px}
+  #setup img{height:44px;margin-bottom:12px}
+  h1{font-size:22px;color:#00716f;margin:8px 0 6px}
+  p{line-height:1.5}
+  input{width:100%;box-sizing:border-box;font:inherit;padding:12px;border:2px solid #cfe3e3;border-radius:12px}
+  button{font:inherit;font-weight:700;background:#00a3a1;color:#fff;border:0;border-radius:12px;padding:12px 20px;margin-top:12px;cursor:pointer}
+  #msg{color:#a00018;font-weight:600;margin-top:10px}
+  #gear{position:fixed;right:0;bottom:0;width:26px;height:26px;border:0;background:transparent;color:#000;opacity:.15;font-size:14px;cursor:pointer;margin:0;padding:0}
+  #off{display:none;padding:32px 20px;text-align:center}
+</style>
+</head>
+<body>
+<div id="setup" style="display:none">
+  <h1>Docházka – první spuštění</h1>
+  <p>Příchody a odchody na pobočce. Vložte odkaz, který vám poslal správce (začíná <b>https://script.google.com/</b>). Zadává se jen jednou, pak se aplikace otevře rovnou.</p>
+  <input id="u" type="url" placeholder="https://script.google.com/macros/s/…/exec?…" autocomplete="off">
+  <button id="save">Uložit a otevřít</button>
+  <div id="msg"></div>
+</div>
+<div id="off"><h1>Bez připojení</h1><p>Aplikace potřebuje internet. Zkontrolujte připojení a obnovte stránku.</p></div>
+<script>
+(function () {
+  var KEY = 'pw_link_tablet';
+  var ALLOWED_ID = 'AKfycbxmKw0jShAUHStfPj0ktU1mUZBK5aDWnPTLqrciidhXnVtuq3bk5WhyvsFU_5JfOIGE0w';   // ID vašeho nasazení z adresy …/macros/s/ID/exec – doplní správce, prázdné = povolí jakékoli
+  var OK = /^https:\/\/script\.google\.com\/(a\/macros\/[A-Za-z0-9.\-]+\/)?macros\/s\/[A-Za-z0-9_\-]+\/exec(\?[^\s#]*)?$/;
+  function valid(v) { return OK.test(v) && (!ALLOWED_ID || v.indexOf('/macros/s/' + ALLOWED_ID + '/exec') !== -1); }
+  function get() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+  function set(v) { try { if (v) localStorage.setItem(KEY, v); else localStorage.removeItem(KEY); } catch (e) {} }
+  function open(link) {
+    document.getElementById('setup').style.display = 'none';
+    var f = document.createElement('iframe'); f.src = link; f.allow = 'fullscreen; clipboard-write'; f.title = 'Docházka';
+    document.body.appendChild(f);
+    var g = document.createElement('button'); g.id = 'gear'; g.textContent = '⚙'; g.title = 'Změnit odkaz';
+    g.onclick = function () { if (confirm('Smazat uložený odkaz a zadat nový?')) { set(''); location.reload(); } };
+    document.body.appendChild(g);
+  }
+  var cur = get();
+  if (cur && valid(cur)) open(cur);
+  else {
+    document.getElementById('setup').style.display = 'block';
+    document.getElementById('save').onclick = function () {
+      var v = document.getElementById('u').value.trim();
+      if (!valid(v)) { document.getElementById('msg').textContent = 'Toto není platný odkaz aplikace. Zkopírujte ho celý, včetně části za „?“.'; return; }
+      set(v); location.reload();
+    };
+  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+})();
+</script>
+</body>
+</html>
